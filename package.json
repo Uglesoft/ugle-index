@@ -1,0 +1,22 @@
+{
+  "name": "ugle-index",
+  "version": "1.0.0",
+  "description": "a frontend utility for pagination and searching",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Christian J Kesler, Uglesoft Openware",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://gitlab.com/uglesoft/openware/ugle-index.git"
+  },
+  "keywords": [
+    "express"
+  ],
+  "bugs": {
+    "url": "https://gitlab.com/uglesoft/openware/ugle-index/issues"
+  },
+  "homepage": "https://gitlab.com/uglesoft/openware/ugle-index#readme"
+}
