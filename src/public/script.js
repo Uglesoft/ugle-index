@@ -1,15 +1,15 @@
-ugle_index = {
+const ugle_index = {
 
     indexInit: (filterId, parentId, pageSize, addressId) => {
 
-        filterEl = document.querySelector(filterId)
-        parentEl = document.querySelector(parentId)
+        window.filterEl = document.querySelector(filterId);
+        window.parentEl = document.querySelector(parentId);
 
-        window.pageSize = pageSize
+        window.pageSize = pageSize;
 
-        window.addressEl = document.querySelector(addressId)
+        window.addressEl = document.querySelector(addressId);
 
-        addressEl.innerHTML = 'Showing 0 of 0'
+        addressEl.innerHTML = 'Showing 0 - 0 of 0';
 
     },
 
@@ -18,28 +18,33 @@ ugle_index = {
             const filteredChildren = [];
 
             const checkChild = (child) => {
-                if (child.classList && child.classList.contains("ugle-index-filter")) {
-                    if (child.innerHTML.toUpperCase().includes(filterEl.value.toUpperCase())) {
-                        child.style.display = "none";
-                        return true;
-                    }
-                }
-
+                let hasMatch = false;
                 if (child.childNodes) {
                     for (let i = 0; i < child.childNodes.length; i++) {
-                        const isHidden = checkChild(child.childNodes[i]);
-                        if (isHidden) {
-                            return true;
+                        if (checkChild(child.childNodes[i])) {
+                            hasMatch = true;
                         }
                     }
                 }
-
-                return false;
+                if (child.classList && child.classList.contains("ugle-index-filter")) {
+                    if (child.innerHTML.toUpperCase().includes(filterEl.value.toUpperCase())) {
+                        hasMatch = true;
+                    }
+                }
+                if (hasMatch) {
+                    return true;
+                } else {
+                    return false;
+                }
             };
 
             completeArray.forEach((child) => {
                 try {
-                    checkChild(child);
+                    if (checkChild(child)) {
+                        child.style.display = "block";
+                    } else {
+                        child.style.display = "none";
+                    }
                 } catch (err) {
                     console.error(err);
                 }
@@ -53,153 +58,153 @@ ugle_index = {
 
         filterEl.value = '';
 
-        paginationBegin()
+        paginationBegin();
 
     },
 
     paginationBegin: async () => {
 
-        beginAddress = 1
-        endAddress = pageSize
+        let beginAddress = 1; // added let keyword
+        let endAddress = pageSize; // added let keyword
 
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
+        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
 
         filteredChildren.forEach((item, index) => {
             if (index > endAddress - 1) {
-                item.style.display = 'none'
+                item.style.display = 'none';
             } else {
-                item.style.display = 'block'
+                item.style.display = 'block';
             }
-        })
+        });
 
         if (filteredChildren.length == 0) {
-            beginAddress = 0
+            beginAddress = 0;
         }
 
         if (filteredChildren.length < endAddress) {
-            endAddress = filteredChildren.length
+            endAddress = filteredChildren.length;
         }
 
-        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
+        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
 
     },
 
     paginationEnd: async () => {
 
-        endAddress = filteredChildren.length
-        beginAddress = filteredChildren.length - pageSize + 1
+        let beginAddress; // added let keyword
+        let endAddress = filteredChildren.length; // added let keyword
 
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
+        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
 
         filteredChildren.forEach((item, index) => {
             if (index >= (filteredChildren.length - pageSize)) {
-                item.style.display = 'block'
+                item.style.display = 'block';
             } else {
-                item.style.display = 'none'
+                item.style.display = 'none';
             }
-        })
+        });
 
         if (filteredChildren.length == 0) {
-            beginAddress = 0
+            beginAddress = 0;
         }
 
         if (beginAddress) {
-            beginAddress = 1
+            beginAddress = 1;
         }
 
         if (filteredChildren.length < endAddress) {
-            endAddress = filteredChildren.length
+            endAddress = filteredChildren.length;
         }
 
-        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
+        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
 
     },
 
     paginationNext: async () => {
 
-        beginAddress = 0
-        endAddress = 0
+        let beginAddress = 0; // added let keyword
+        let endAddress = 0; // added let keyword
+        let found = false;
+        let counter = 0;
 
-        found = false
-        counter = 0
-
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
+        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
 
         filteredChildren.forEach((item, index) => {
             if (item.style.display == 'block') {
-                found = true
-                item.style.display = 'none'
+                found = true;
+                item.style.display = 'none';
             } else if (found && counter < pageSize) {
                 if (counter == 0) {
-                    beginAddress = index
+                    beginAddress = index;
                 }
-                counter++
-                item.style.display = 'block'
+                counter++;
+                item.style.display = 'block';
             }
-        })
+        });
 
         if (counter < pageSize) {
-            paginationEnd()
+            paginationEnd();
         } else {
 
-            beginAddress += 1
+            beginAddress += 1;
 
             if (filteredChildren.length == 0) {
-                beginAddress = 0
+                beginAddress = 0;
             }
 
-            endAddress = beginAddress + pageSize - 1
+            endAddress = beginAddress + pageSize - 1;
 
             if (filteredChildren.length < endAddress) {
-                endAddress = filteredChildren.length
+                endAddress = filteredChildren.length;
             }
 
-            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
+            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
         }
 
     },
 
     paginationPrev: async () => {
 
-        beginAddress = 0
-        endAddress = 0
+        let beginAddress = 0; // added let keyword
+        let endAddress = 0; // added let keyword
+        let found = false;
+        let counter = 0;
 
-        found = false
-        counter = 0
+        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
 
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
+        const reversedFilteredChildren = [...filteredChildren].reverse(); // create a copy of the array and reverse it
 
-        filteredChildren.reverse().forEach((item, index) => {
+        reversedFilteredChildren.forEach((item, index) => { // use the reversed array
             if (item.style.display == 'block') {
-                found = true
-                item.style.display = 'none'
+                found = true;
+                item.style.display = 'none';
             } else if (found && counter < pageSize) {
                 if (counter == 0) {
-                    endAddress = filteredChildren.length - index
+                    endAddress = filteredChildren.length - index;
                 }
-                counter++
-                item.style.display = 'block'
+                counter++;
+                item.style.display = 'block';
             }
-        })
+        });
 
         if (counter < pageSize) {
-            paginationBegin()
+            paginationBegin();
         } else {
 
-            beginAddress = endAddress - pageSize + 1
+            beginAddress = endAddress - pageSize + 1;
 
             if (beginAddress < 1) {
-                beginAddress = 1
+                beginAddress = 1;
             }
 
             if (filteredChildren.length < endAddress) {
-                endAddress = filteredChildren.length
+                endAddress = filteredChildren.length;
             }
 
-            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
+            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
 
         }
 
     },
 
-}
+};
