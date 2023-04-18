@@ -15,34 +15,38 @@ ugle_index = {
 
     returnFilteredChildren: (completeArray) => {
         return new Promise((resolve) => {
-            filteredChildren = []
+            const filteredChildren = [];
 
-            completeArray.forEach((child, index) => {
-                try {
-
-                    tag_stripped = child.innerHTML.toUpperCase().replace(new RegExp(`<[^${tagName}]`, 'ig'), '').replace(new RegExp(`${tagName}[^>]+>`, 'ig'), '')
-                    raw_substring = tag_stripped.substring(0, tag_stripped.indexOf('<'))
-
-                    let tag_stripped = child.innerHTML.toUpperCase().replace(new RegExp(`<[^${tagName}]`, 'ig'), '').replace(new RegExp(`${tagName}[^>]+>`, 'ig'), '');
-                    let raw_substring = tag_stripped.substring(0, tag_stripped.indexOf('<'));
-
-                    if (raw_substring.includes(filterEl.value.toUpperCase())) {
-                        // (/<([^>]+)>)/ig, '')
-                        filteredChildren.push(child)
-                    } else {
-                        child.style.display = 'none'
+            const checkChild = (child) => {
+                if (child.classList && child.classList.contains("ugle-index-filter")) {
+                    if (child.innerHTML.toUpperCase().includes(filterEl.value.toUpperCase())) {
+                        child.style.display = "none";
+                        return true;
                     }
-
-                    if (index == completeArray.length - 1) {
-
-                        resolve(filteredChildren)
-
-                    }
-                } catch (err) {
-                    console.error(err)
                 }
-            })
-        })
+
+                if (child.childNodes) {
+                    for (let i = 0; i < child.childNodes.length; i++) {
+                        const isHidden = checkChild(child.childNodes[i]);
+                        if (isHidden) {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            };
+
+            completeArray.forEach((child) => {
+                try {
+                    checkChild(child);
+                } catch (err) {
+                    console.error(err);
+                }
+            });
+
+            resolve(filteredChildren);
+        });
     },
 
     resetFilter: async () => {
