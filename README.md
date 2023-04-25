@@ -1,5 +1,8 @@
 # ugle-index
 
+A front end utility for paginating and searching
+
+![ugle-index icon](https://raw.githubusercontent.com/Uglesoft/ugle-index/main/ICON.png)
 
 
 ## Installation
