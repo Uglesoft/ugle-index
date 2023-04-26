@@ -1,15 +1,21 @@
 const ugle_index = {
 
-    indexInit: (filterId, parentId, pageSize, addressId) => {
+    indexInit: (filterId, parentId, pageSize, addressId, targetClass) => {
 
         window.filterEl = document.querySelector(filterId);
         window.parentEl = document.querySelector(parentId);
 
         window.pageSize = pageSize;
+        window.addressBegin = 0;
+        window.addressEnd = 0;
 
         window.addressEl = document.querySelector(addressId);
 
         addressEl.innerHTML = 'Showing 0 - 0 of 0';
+
+        window.targetClass = targetClass
+
+        ugle_index.resetFilter()
 
     },
 
@@ -26,7 +32,7 @@ const ugle_index = {
                         }
                     }
                 }
-                if (child.classList && child.classList.contains("ugle-index-filter")) {
+                if (child.classList && child.classList.contains(targetClass)) {
                     if (child.innerHTML.toUpperCase().includes(filterEl.value.toUpperCase())) {
                         hasMatch = true;
                     }
@@ -42,6 +48,7 @@ const ugle_index = {
                 try {
                     if (checkChild(child)) {
                         child.style.display = "block";
+                        filteredChildren.push(child)
                     } else {
                         child.style.display = "none";
                     }
@@ -51,6 +58,7 @@ const ugle_index = {
             });
 
             resolve(filteredChildren);
+
         });
     },
 
@@ -58,153 +66,65 @@ const ugle_index = {
 
         filterEl.value = '';
 
-        paginationBegin();
+        ugle_index.paginationBegin();
 
     },
 
     paginationBegin: async () => {
 
-        let beginAddress = 1; // added let keyword
-        let endAddress = pageSize; // added let keyword
-
-        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
-
-        filteredChildren.forEach((item, index) => {
-            if (index > endAddress - 1) {
-                item.style.display = 'none';
-            } else {
-                item.style.display = 'block';
-            }
-        });
-
-        if (filteredChildren.length == 0) {
-            beginAddress = 0;
-        }
-
-        if (filteredChildren.length < endAddress) {
-            endAddress = filteredChildren.length;
-        }
-
-        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
+        ugle_index.goto(0)
 
     },
 
     paginationEnd: async () => {
 
-        let beginAddress; // added let keyword
-        let endAddress = filteredChildren.length; // added let keyword
-
-        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
-
-        filteredChildren.forEach((item, index) => {
-            if (index >= (filteredChildren.length - pageSize)) {
-                item.style.display = 'block';
-            } else {
-                item.style.display = 'none';
-            }
-        });
-
-        if (filteredChildren.length == 0) {
-            beginAddress = 0;
-        }
-
-        if (beginAddress) {
-            beginAddress = 1;
-        }
-
-        if (filteredChildren.length < endAddress) {
-            endAddress = filteredChildren.length;
-        }
-
-        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
+        ugle_index.goto(Array.from(parentEl.children).length)
 
     },
 
     paginationNext: async () => {
 
-        let beginAddress = 0; // added let keyword
-        let endAddress = 0; // added let keyword
-        let found = false;
-        let counter = 0;
-
-        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
-
-        filteredChildren.forEach((item, index) => {
-            if (item.style.display == 'block') {
-                found = true;
-                item.style.display = 'none';
-            } else if (found && counter < pageSize) {
-                if (counter == 0) {
-                    beginAddress = index;
-                }
-                counter++;
-                item.style.display = 'block';
-            }
-        });
-
-        if (counter < pageSize) {
-            paginationEnd();
-        } else {
-
-            beginAddress += 1;
-
-            if (filteredChildren.length == 0) {
-                beginAddress = 0;
-            }
-
-            endAddress = beginAddress + pageSize - 1;
-
-            if (filteredChildren.length < endAddress) {
-                endAddress = filteredChildren.length;
-            }
-
-            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
-        }
+        ugle_index.goto(addressBegin + pageSize)
 
     },
 
     paginationPrev: async () => {
 
-        let beginAddress = 0; // added let keyword
-        let endAddress = 0; // added let keyword
-        let found = false;
-        let counter = 0;
-
-        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children)); // added const keyword
-
-        const reversedFilteredChildren = [...filteredChildren].reverse(); // create a copy of the array and reverse it
-
-        reversedFilteredChildren.forEach((item, index) => { // use the reversed array
-            if (item.style.display == 'block') {
-                found = true;
-                item.style.display = 'none';
-            } else if (found && counter < pageSize) {
-                if (counter == 0) {
-                    endAddress = filteredChildren.length - index;
-                }
-                counter++;
-                item.style.display = 'block';
-            }
-        });
-
-        if (counter < pageSize) {
-            paginationBegin();
-        } else {
-
-            beginAddress = endAddress - pageSize + 1;
-
-            if (beginAddress < 1) {
-                beginAddress = 1;
-            }
-
-            if (filteredChildren.length < endAddress) {
-                endAddress = filteredChildren.length;
-            }
-
-            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`;
-
-        }
+        ugle_index.goto(addressBegin - pageSize)
 
     },
+
+    goto: async (target) => {
+
+        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children));
+
+        if (target >= filteredChildren.length) {
+            if (filteredChildren.length % pageSize == 0) {
+                target = filteredChildren.length - pageSize
+            } else {
+                target = filteredChildren.length - (filteredChildren.length % pageSize)
+            }
+        }
+        if (target < 0) {
+            target = 0
+        }
+
+        for (let i = 0; i < filteredChildren.length; i++) {
+            if (i < target || i >= target + pageSize) {
+                filteredChildren[i].style.display = 'none';
+            }
+        }
+
+        addressBegin = target
+        addressEnd = Math.min(target + pageSize, filteredChildren.length)
+
+        if ((addressBegin + 1) == addressEnd) {
+            address = addressEnd
+        } else {
+            address = `${addressBegin + 1} - ${addressEnd}`
+        }
+        addressEl.innerHTML = `Showing ${address} of ${filteredChildren.length}`;
+
+    }
 
 };
