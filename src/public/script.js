@@ -2,14 +2,14 @@ const ugle_index = {
 
     indexInit: (filterId, parentId, pageSize, addressId, targetClass) => {
 
-        window.filterEl = document.querySelector(filterId);
-        window.parentEl = document.querySelector(parentId);
+        window.filterEl = document.getElementById(filterId);
+        window.parentEl = document.getElementById(parentId);
 
         window.pageSize = pageSize;
         window.addressBegin = 0;
         window.addressEnd = 0;
 
-        window.addressEl = document.querySelector(addressId);
+        window.addressEl = document.getElementById(addressId);
 
         addressEl.innerHTML = 'Showing 0 - 0 of 0';
 
