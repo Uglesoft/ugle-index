@@ -1,201 +1,130 @@
-ugle_index = {
+const ugle_index = {
 
-    indexInit: (filterId, parentId, pageSize, addressId) => {
+    indexInit: (filterId, parentId, pageSize, addressId, targetClass) => {
 
-        filterEl = document.querySelector(filterId)
-        parentEl = document.querySelector(parentId)
+        window.filterEl = document.getElementById(filterId);
+        window.parentEl = document.getElementById(parentId);
 
-        window.pageSize = pageSize
+        window.pageSize = pageSize;
+        window.addressBegin = 0;
+        window.addressEnd = 0;
 
-        window.addressEl = document.querySelector(addressId)
+        window.addressEl = document.getElementById(addressId);
 
-        addressEl.innerHTML = 'Showing 0 of 0'
+        addressEl.innerHTML = 'Showing 0 - 0 of 0';
+
+        window.targetClass = targetClass
+
+        ugle_index.resetFilter()
 
     },
 
     returnFilteredChildren: (completeArray) => {
         return new Promise((resolve) => {
-            filteredChildren = []
+            const filteredChildren = [];
 
-            completeArray.forEach((child, index) => {
+            const checkChild = (child) => {
+                let hasMatch = false;
+                if (child.childNodes) {
+                    for (let i = 0; i < child.childNodes.length; i++) {
+                        if (checkChild(child.childNodes[i])) {
+                            hasMatch = true;
+                        }
+                    }
+                }
+                if (child.classList && child.classList.contains(targetClass)) {
+                    if (child.innerHTML.toUpperCase().includes(filterEl.value.toUpperCase())) {
+                        hasMatch = true;
+                    }
+                }
+                if (hasMatch) {
+                    return true;
+                } else {
+                    return false;
+                }
+            };
+
+            completeArray.forEach((child) => {
                 try {
-
-                    tag_stripped = child.innerHTML.toUpperCase().replace(new RegExp(`<[^${tagName}]`, 'ig'), '').replace(new RegExp(`${tagName}[^>]+>`, 'ig'), '')
-                    raw_substring = tag_stripped.substring(0, tag_stripped.indexOf('<'))
-
-                    let tag_stripped = child.innerHTML.toUpperCase().replace(new RegExp(`<[^${tagName}]`, 'ig'), '').replace(new RegExp(`${tagName}[^>]+>`, 'ig'), '');
-                    let raw_substring = tag_stripped.substring(0, tag_stripped.indexOf('<'));
-
-                    if (raw_substring.includes(filterEl.value.toUpperCase())) {
-                        // (/<([^>]+)>)/ig, '')
+                    if (checkChild(child)) {
+                        child.style.display = "block";
                         filteredChildren.push(child)
                     } else {
-                        child.style.display = 'none'
-                    }
-
-                    if (index == completeArray.length - 1) {
-
-                        resolve(filteredChildren)
-
+                        child.style.display = "none";
                     }
                 } catch (err) {
-                    console.error(err)
+                    console.error(err);
                 }
-            })
-        })
+            });
+
+            resolve(filteredChildren);
+
+        });
     },
 
     resetFilter: async () => {
 
         filterEl.value = '';
 
-        paginationBegin()
+        ugle_index.paginationBegin();
 
     },
 
     paginationBegin: async () => {
 
-        beginAddress = 1
-        endAddress = pageSize
-
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
-
-        filteredChildren.forEach((item, index) => {
-            if (index > endAddress - 1) {
-                item.style.display = 'none'
-            } else {
-                item.style.display = 'block'
-            }
-        })
-
-        if (filteredChildren.length == 0) {
-            beginAddress = 0
-        }
-
-        if (filteredChildren.length < endAddress) {
-            endAddress = filteredChildren.length
-        }
-
-        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
+        ugle_index.goto(0)
 
     },
 
     paginationEnd: async () => {
 
-        endAddress = filteredChildren.length
-        beginAddress = filteredChildren.length - pageSize + 1
-
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
-
-        filteredChildren.forEach((item, index) => {
-            if (index >= (filteredChildren.length - pageSize)) {
-                item.style.display = 'block'
-            } else {
-                item.style.display = 'none'
-            }
-        })
-
-        if (filteredChildren.length == 0) {
-            beginAddress = 0
-        }
-
-        if (beginAddress) {
-            beginAddress = 1
-        }
-
-        if (filteredChildren.length < endAddress) {
-            endAddress = filteredChildren.length
-        }
-
-        addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
+        ugle_index.goto(Array.from(parentEl.children).length)
 
     },
 
     paginationNext: async () => {
 
-        beginAddress = 0
-        endAddress = 0
-
-        found = false
-        counter = 0
-
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
-
-        filteredChildren.forEach((item, index) => {
-            if (item.style.display == 'block') {
-                found = true
-                item.style.display = 'none'
-            } else if (found && counter < pageSize) {
-                if (counter == 0) {
-                    beginAddress = index
-                }
-                counter++
-                item.style.display = 'block'
-            }
-        })
-
-        if (counter < pageSize) {
-            paginationEnd()
-        } else {
-
-            beginAddress += 1
-
-            if (filteredChildren.length == 0) {
-                beginAddress = 0
-            }
-
-            endAddress = beginAddress + pageSize - 1
-
-            if (filteredChildren.length < endAddress) {
-                endAddress = filteredChildren.length
-            }
-
-            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
-        }
+        ugle_index.goto(addressBegin + pageSize)
 
     },
 
     paginationPrev: async () => {
 
-        beginAddress = 0
-        endAddress = 0
-
-        found = false
-        counter = 0
-
-        filterChildren = await returnFilteredChildren(Array.from(parentEl.children))
-
-        filteredChildren.reverse().forEach((item, index) => {
-            if (item.style.display == 'block') {
-                found = true
-                item.style.display = 'none'
-            } else if (found && counter < pageSize) {
-                if (counter == 0) {
-                    endAddress = filteredChildren.length - index
-                }
-                counter++
-                item.style.display = 'block'
-            }
-        })
-
-        if (counter < pageSize) {
-            paginationBegin()
-        } else {
-
-            beginAddress = endAddress - pageSize + 1
-
-            if (beginAddress < 1) {
-                beginAddress = 1
-            }
-
-            if (filteredChildren.length < endAddress) {
-                endAddress = filteredChildren.length
-            }
-
-            addressEl.innerHTML = `Showing ${beginAddress} - ${endAddress} of ${filteredChildren.length}`
-
-        }
+        ugle_index.goto(addressBegin - pageSize)
 
     },
 
-}
+    goto: async (target) => {
+
+        const filteredChildren = await ugle_index.returnFilteredChildren(Array.from(parentEl.children));
+
+        if (target >= filteredChildren.length) {
+            if (filteredChildren.length % pageSize == 0) {
+                target = filteredChildren.length - pageSize
+            } else {
+                target = filteredChildren.length - (filteredChildren.length % pageSize)
+            }
+        }
+        if (target < 0) {
+            target = 0
+        }
+
+        for (let i = 0; i < filteredChildren.length; i++) {
+            if (i < target || i >= target + pageSize) {
+                filteredChildren[i].style.display = 'none';
+            }
+        }
+
+        addressBegin = target
+        addressEnd = Math.min(target + pageSize, filteredChildren.length)
+
+        if ((addressBegin + 1) == addressEnd) {
+            address = addressEnd
+        } else {
+            address = `${addressBegin + 1} - ${addressEnd}`
+        }
+        addressEl.innerHTML = `Showing ${address} of ${filteredChildren.length}`;
+
+    }
+
+};
